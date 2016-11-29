@@ -8,6 +8,8 @@ UpdateChecker::UpdateChecker(QUrl const& updateUrl)
           SLOT(httpRequestFinished(QNetworkReply*)));
 
   manager_->get(QNetworkRequest(updateUrl));
+
+  startTimer(10000);
 }
 
 void UpdateChecker::httpRequestFinished(QNetworkReply* pReply) {
@@ -15,7 +17,7 @@ void UpdateChecker::httpRequestFinished(QNetworkReply* pReply) {
 
   // If there was an error, don't bother doing the check
   if (reply->error() != QNetworkReply::NoError) {
-    emit done(true);
+    emit done(1);
     return;
   }
 
@@ -26,11 +28,17 @@ void UpdateChecker::httpRequestFinished(QNetworkReply* pReply) {
   // in the format x.x[.x]*
   if (candidateVersion.indexOf(".") < 0) {
     // There was some invalid response, so we'll ignore the check for now
-    emit done(true);
+    emit done(1);
     return;
   }
 
   // Completed with no errors
   m_latestVersion = candidateVersion;
-  emit done(false);
+  emit done(0);
+}
+
+void UpdateChecker::timerEvent(QTimerEvent* event) {
+  // Oneshot
+  killTimer(event->timerId());
+  emit done(2);
 }

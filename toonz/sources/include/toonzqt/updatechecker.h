@@ -11,6 +11,7 @@
 #include <QUrl>
 #include <QString>
 #include <QSharedPointer>
+#include <QTimerEvent>
 
 #undef DVAPI
 #undef DVVAR
@@ -34,11 +35,21 @@ public:
 
   QString getLatestVersion() const { return m_latestVersion; }
 
+protected:
+  void timerEvent(QTimerEvent*);
+
 protected slots:
   void httpRequestFinished(QNetworkReply*);
 
 signals:
-  void done(bool error);
+  /**
+   ** @param error
+   **
+   **    0: no error;
+   **    1: error in the connection;
+   **    2: forced timeout
+   */
+  void done(int error);
 };
 
 #endif  // UPDATE_CHECKER_H

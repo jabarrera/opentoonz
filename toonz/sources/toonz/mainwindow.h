@@ -199,7 +199,7 @@ protected slots:
   void onInkCheckTriggered(bool on);
   void onInk1CheckTriggered(bool on);
 
-  void onUpdateCheckerDone(bool);
+  void onUpdateCheckerDone(int);
 
 public slots:
   /*--- タイトルにシーン名を入れる ---*/

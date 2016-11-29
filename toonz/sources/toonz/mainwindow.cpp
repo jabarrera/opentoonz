@@ -1292,34 +1292,42 @@ void MainWindow::checkForUpdates() {
   QString updateUrl("http://opentoonz.github.io/opentoonz-version.txt");
 
   m_updateChecker = new UpdateChecker(updateUrl);
-  connect(m_updateChecker, SIGNAL(done(bool)), this,
-          SLOT(onUpdateCheckerDone(bool)));
+  connect(m_updateChecker, SIGNAL(done(int)), this,
+          SLOT(onUpdateCheckerDone(int)));
 }
 //-----------------------------------------------------------------------------
 
-void MainWindow::onUpdateCheckerDone(bool error) {
-  if (error) {
-    // Get the last update date
-    return;
-  }
-
-  int const software_version =
-      get_version_code_from(TEnv::getApplicationVersion());
-  int const latest_version =
-      get_version_code_from(m_updateChecker->getLatestVersion().toStdString());
-  if (software_version < latest_version) {
-    std::vector<QString> buttons;
-    buttons.push_back(QObject::tr("Visit Web Site"));
-    buttons.push_back(QObject::tr("Cancel"));
-    int ret = DVGui::MsgBox(
-        DVGui::INFORMATION,
-        QObject::tr("An update is available for this software.\nVisit the Web "
-                    "site for more information."),
-        buttons);
-    if (ret == 1) {
-      // Write the new last date to file
-      QDesktopServices::openUrl(QObject::tr("https://opentoonz.github.io/e/"));
+void MainWindow::onUpdateCheckerDone(int error) {
+  /*
+   * 0: no error
+   * 1: error in conecction
+   * 2: forced timetout
+   */
+  if (error == 0) {
+    int const software_version =
+        get_version_code_from(TEnv::getApplicationVersion());
+    int const latest_version = get_version_code_from(
+        m_updateChecker->getLatestVersion().toStdString());
+    if (software_version < latest_version) {
+      std::vector<QString> buttons;
+      buttons.push_back(QObject::tr("Visit Web Site"));
+      buttons.push_back(QObject::tr("Cancel"));
+      int ret = DVGui::MsgBox(
+          DVGui::INFORMATION,
+          QObject::tr(
+              "An update is available for this software.\nVisit the Web "
+              "site for more information."),
+          buttons);
+      if (ret == 1) {
+        // Write the new last date to file
+        QDesktopServices::openUrl(
+            QObject::tr("https://opentoonz.github.io/e/"));
+      }
     }
+  } else if (error == 1) {
+    DVGui::error(QObject::tr("Update connection finished with error"));
+  } else if (error == 2) {
+    DVGui::warning(QObject::tr("Update connection finished with timeout"));
   }
 
   disconnect(m_updateChecker);
@@ -2243,9 +2251,9 @@ RecentFiles::~RecentFiles() {}
 
 void RecentFiles::addFilePath(QString path, FileType fileType) {
   QList<QString> files =
-      (fileType == Scene)
-          ? m_recentScenes
-          : (fileType == Level) ? m_recentLevels : m_recentFlipbookImages;
+      (fileType == Scene) ? m_recentScenes : (fileType == Level)
+                                                 ? m_recentLevels
+                                                 : m_recentFlipbookImages;
   int i;
   for (i = 0; i < files.size(); i++)
     if (files.at(i) == path) files.removeAt(i);
@@ -2360,9 +2368,9 @@ void RecentFiles::saveRecentFiles() {
 
 QList<QString> RecentFiles::getFilesNameList(FileType fileType) {
   QList<QString> files =
-      (fileType == Scene)
-          ? m_recentScenes
-          : (fileType == Level) ? m_recentLevels : m_recentFlipbookImages;
+      (fileType == Scene) ? m_recentScenes : (fileType == Level)
+                                                 ? m_recentLevels
+                                                 : m_recentFlipbookImages;
   QList<QString> names;
   int i;
   for (i = 0; i < files.size(); i++) {
@@ -2389,9 +2397,9 @@ void RecentFiles::refreshRecentFilesMenu(FileType fileType) {
     menu->setEnabled(false);
   else {
     CommandId clearActionId =
-        (fileType == Scene)
-            ? MI_ClearRecentScene
-            : (fileType == Level) ? MI_ClearRecentLevel : MI_ClearRecentImage;
+        (fileType == Scene) ? MI_ClearRecentScene : (fileType == Level)
+                                                        ? MI_ClearRecentLevel
+                                                        : MI_ClearRecentImage;
     menu->setActions(names);
     menu->addSeparator();
     QAction *clearAction = CommandManager::instance()->getAction(clearActionId);
